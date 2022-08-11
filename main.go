@@ -27,6 +27,7 @@ var (
 	pathParams = kingpin.Flag("path", "Path parameters to send").Short('p').StringMap()
 	payload    = kingpin.Flag("data-raw", "Request body to send").String()
 	outFormat  = kingpin.Flag("output-format", "Output format to report").Default("pretty").Enum("json", "text", "pretty")
+	errorsOnly = kingpin.Flag("errors-only", "Show only errors (not http status errors)").Bool()
 
 	replacements = map[string]replacer{
 		"{{UUID}}": func() string { return uuid.New().String() },
@@ -92,8 +93,9 @@ func main() {
 			json.Unmarshal(body, &ld.Response.Payload)
 			ld.Response.Headers = headers
 
-			if err != nil {
-				fmt.Println(err)
+			ld.Error = err
+
+			if *errorsOnly && ld.Error == nil {
 				return
 			}
 

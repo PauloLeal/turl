@@ -25,6 +25,7 @@ type httpResponseLogData struct {
 type HttpLogData struct {
 	Request  httpRequestLogData  `json:"request"`
 	Response httpResponseLogData `json:"response"`
+	Error    error
 }
 
 func (ld *HttpLogData) PrintText() {
@@ -79,6 +80,7 @@ func (ld *HttpLogData) PrintPretty() {
 	b, _ = json.MarshalIndent(ld.Response.Payload, "Response -- \t", "    ")
 	s = fmt.Sprintf("%sResponse --\t%s\n", s, string(b))
 
+	s = fmt.Sprintf("%sResponse -- Error: %s", s, ld.Error.Error())
 	s = fmt.Sprintf("%s\n%s", s, strings.Repeat("=", 120))
 
 	printMutex.Lock()
