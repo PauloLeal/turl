@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
+	"github.com/PauloLeal/turl/integration"
 )
 
 type TURL struct {
@@ -17,6 +17,14 @@ type TURL struct {
 	QueryParams    map[string]string
 	Payload        string
 	FollowLocation bool
+}
+
+type FHttpRequester func(method string, url string, headers map[string]string, query map[string]string, payload string) (int, string, map[string]string, error)
+
+var HttpRequester FHttpRequester
+
+func init() {
+	HttpRequester = integration.MakeHttpRequest
 }
 
 func MakeRequest(t TURL) TURLData {
@@ -60,7 +68,7 @@ func MakeRequest(t TURL) TURLData {
 	ld.Request.Headers = rHeaders
 	json.Unmarshal([]byte(rBody), &ld.Request.Payload)
 
-	status, body, headers, err := makeRequest(rMethod, rUrl, rHeaders, rQuery, rBody)
+	status, body, headers, err := HttpRequester(rMethod, rUrl, rHeaders, rQuery, rBody)
 
 	ld.Response.StatusCode = status
 	json.Unmarshal([]byte(body), &ld.Response.Payload)
@@ -69,24 +77,4 @@ func MakeRequest(t TURL) TURLData {
 	ld.Error = err
 
 	return ld
-}
-
-func makeRequest(method string, url string, headers map[string]string, query map[string]string, payload string) (int, string, map[string]string, error) {
-	var res *resty.Response
-	var err error
-	client := resty.New()
-
-	req := client.R().
-		SetHeaders(headers).
-		SetQueryParams(query).
-		SetBody(payload)
-
-	res, err = req.Execute(strings.ToUpper(method), url)
-
-	responseHeaders := make(map[string]string)
-	for k, v := range res.Header() {
-		responseHeaders[k] = strings.Join(v, ", ")
-	}
-
-	return res.StatusCode(), string(res.Body()), responseHeaders, err
 }
