@@ -1,4 +1,4 @@
-package main
+package turl
 
 import (
 	"encoding/json"
@@ -7,34 +7,33 @@ import (
 	"sync"
 )
 
-var printMutex sync.Mutex
-
-type httpRequestLogData struct {
-	Method  string            `json:"method"`
-	Url     string            `json:"url"`
-	Headers map[string]string `json:"headers"`
-	Payload any               `json:"payload"`
+type TURLData struct {
+	Request struct {
+		Method  string            `json:"method"`
+		Url     string            `json:"url"`
+		Headers map[string]string `json:"headers"`
+		Query   map[string]string `json:"query"`
+		Payload any               `json:"payload"`
+	} `json:"request"`
+	Response struct {
+		StatusCode int               `json:"status_code"`
+		Headers    map[string]string `json:"headers"`
+		Payload    any               `json:"payload"`
+	} `json:"response"`
+	Error error
 }
 
-type httpResponseLogData struct {
-	StatusCode int               `json:"status_code"`
-	Headers    map[string]string `json:"headers"`
-	Payload    any               `json:"payload"`
-}
-
-type HttpLogData struct {
-	Request  httpRequestLogData  `json:"request"`
-	Response httpResponseLogData `json:"response"`
-	Error    error
-}
-
-func (ld *HttpLogData) PrintText() {
+func (ld *TURLData) PrintText() {
 	s := make([]string, 0)
 	s = append(s, fmt.Sprintf("Request.Method: %s", ld.Request.Method))
 	s = append(s, fmt.Sprintf("Request.Url: %s", ld.Request.Url))
 
 	for k, v := range ld.Request.Headers {
 		s = append(s, fmt.Sprintf("Request.Headers.%s: %s", k, v))
+	}
+
+	for k, v := range ld.Request.Query {
+		s = append(s, fmt.Sprintf("Request.Query.%s: %s", k, v))
 	}
 
 	b, _ := json.Marshal(ld.Request.Payload)
@@ -49,16 +48,21 @@ func (ld *HttpLogData) PrintText() {
 	b, _ = json.Marshal(ld.Response.Payload)
 	s = append(s, "Response.Payload: %s", string(b))
 
-	printMutex.Lock()
-	fmt.Println(strings.Join(s, " | "))
-	printMutex.Unlock()
+	lockPrint(strings.Join(s, " | "))
 }
 
-func (ld *HttpLogData) PrintPretty() {
+func (ld *TURLData) PrintPretty() {
 	s := fmt.Sprintf("Request  -- Method: %s\t\tURL: %s\n", ld.Request.Method, ld.Request.Url)
+
 	s = fmt.Sprintf("%sRequest  -- Headers: \n", s)
 
 	for k, v := range ld.Request.Headers {
+		s = fmt.Sprintf("%sRequest  --\t%s = %s\n", s, k, v)
+	}
+
+	s = fmt.Sprintf("%sRequest  -- Query: \n", s)
+
+	for k, v := range ld.Request.Query {
 		s = fmt.Sprintf("%sRequest  --\t%s = %s\n", s, k, v)
 	}
 
@@ -67,7 +71,7 @@ func (ld *HttpLogData) PrintPretty() {
 	b, _ := json.MarshalIndent(ld.Request.Payload, "Request  -- \t", "    ")
 	s = fmt.Sprintf("%sRequest  --\t%s\n", s, string(b))
 
-	s = fmt.Sprintf("%s\n%s\n", s, strings.Repeat("-", 20))
+	s = fmt.Sprintf("%s%s\n", s, strings.Repeat("-", 20))
 
 	s = fmt.Sprintf("%sResponse -- Status Code: %d\n", s, ld.Response.StatusCode)
 	s = fmt.Sprintf("%sResponse -- Headers: \n", s)
@@ -80,18 +84,22 @@ func (ld *HttpLogData) PrintPretty() {
 	b, _ = json.MarshalIndent(ld.Response.Payload, "Response -- \t", "    ")
 	s = fmt.Sprintf("%sResponse --\t%s\n", s, string(b))
 
-	s = fmt.Sprintf("%sResponse -- Error: %s", s, ld.Error.Error())
-	s = fmt.Sprintf("%s\n%s", s, strings.Repeat("=", 120))
+	s = fmt.Sprintf("%sResponse -- Error: %s\n", s, ld.Error.Error())
+	s = fmt.Sprintf("%s%s", s, strings.Repeat("=", 120))
 
-	printMutex.Lock()
-	fmt.Println(s)
-	printMutex.Unlock()
+	lockPrint(s)
 }
 
-func (ld *HttpLogData) PrintJson() {
+func (ld *TURLData) PrintJson() {
 	b, _ := json.Marshal(ld)
 
+	lockPrint(string(b))
+}
+
+var printMutex sync.Mutex
+
+func lockPrint(s string) {
 	printMutex.Lock()
-	fmt.Println(string(b))
+	fmt.Println(s)
 	printMutex.Unlock()
 }

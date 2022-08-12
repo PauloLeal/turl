@@ -1,4 +1,4 @@
-module github.com/PauloLeal/http-requests-tester
+module github.com/PauloLeal/turl
 
 go 1.18
 
