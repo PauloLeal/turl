@@ -26,7 +26,11 @@ var replacements = map[string]Replacer{
 	"{{ULID}}":      func() string { return ulid.Make().String() },
 	"{{RANDINT-3}}": func() string { return fmt.Sprintf("%03d", randN(3)) },
 	"{{RANDINT-5}}": func() string { return fmt.Sprintf("%05d", randN(5)) },
+	"{{SEQINT}}":    func() string { return fmt.Sprintf("%d", nextSeq()) },
+	"{{SEQINT-5}}":  func() string { return fmt.Sprintf("%05d", nextSeq()) },
 }
+
+var seq int = 0
 
 func init() {
 	rand.Seed(time.Now().UnixNano())
@@ -35,6 +39,11 @@ func init() {
 func randN(n int) int {
 	d := math.Pow(10, float64(n))
 	return rand.Intn(int(d))
+}
+
+func nextSeq() int {
+	seq += 1
+	return seq - 1
 }
 
 func makeReplacements(s string) string {
