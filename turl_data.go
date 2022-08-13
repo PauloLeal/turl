@@ -84,7 +84,11 @@ func (ld *TURLData) PrintPretty() {
 	b, _ = json.MarshalIndent(ld.Response.Payload, "Response -- \t", "    ")
 	s = fmt.Sprintf("%sResponse --\t%s\n", s, string(b))
 
-	s = fmt.Sprintf("%sResponse -- Error: %s\n", s, ld.Error.Error())
+	errs := "-"
+	if ld.Error != nil {
+		errs = ld.Error.Error()
+	}
+	s = fmt.Sprintf("%sResponse -- Error: %s\n", s, errs)
 	s = fmt.Sprintf("%s%s", s, strings.Repeat("=", 120))
 
 	lockPrint(s)

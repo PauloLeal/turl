@@ -18,6 +18,7 @@ var (
 	pathParams     = kingpin.Flag("path", "Path parameters to send").Short('p').StringMap()
 	queryParams    = kingpin.Flag("query", "Query parameters to send").Short('Q').StringMap()
 	outFormat      = kingpin.Flag("output-format", "Output format to report").Default("pretty").Enum("json", "text", "pretty")
+	statusOnly     = kingpin.Flag("status-only", "Show only requests with this status").Int()
 	errorsOnly     = kingpin.Flag("errors-only", "Show only errors (not http status errors)").Bool()
 )
 
@@ -49,13 +50,17 @@ func main() {
 				return
 			}
 
+			if *statusOnly > 0 && ld.Response.StatusCode != *statusOnly {
+				return
+			}
+
 			switch *outFormat {
-			case "pretty":
-				ld.PrintPretty()
 			case "json":
 				ld.PrintJson()
 			case "text":
 				ld.PrintText()
+			default:
+				ld.PrintPretty()
 			}
 		}()
 	}
