@@ -18,6 +18,7 @@ var (
 	pathParams     = kingpin.Flag("path", "Path parameters to send").Short('p').StringMap()
 	queryParams    = kingpin.Flag("query", "Query parameters to send").Short('Q').StringMap()
 	outFormat      = kingpin.Flag("output-format", "Output format to report").Default("pretty").Enum("json", "text", "pretty")
+	noOutput       = kingpin.Flag("no-output", "Supress requests output").Bool()
 	statusOnly     = kingpin.Flag("status-only", "Show only requests with this status").Int()
 	errorsOnly     = kingpin.Flag("errors-only", "Show only errors (not http status errors)").Bool()
 )
@@ -46,6 +47,11 @@ func main() {
 			defer wg.Done()
 
 			ld := turl.MakeRequest(params)
+
+			if *noOutput {
+				return
+			}
+
 			if *errorsOnly && ld.Error == nil {
 				return
 			}
