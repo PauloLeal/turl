@@ -34,6 +34,10 @@ func main() {
 		log.Fatal("count cannot be < 0")
 	}
 
+	if *loop < 1 {
+		*loop = 1
+	}
+
 	params := turl.TURL{
 		Method:         *method,
 		URL:            *targetUrl,
