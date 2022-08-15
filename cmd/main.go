@@ -16,7 +16,7 @@ var (
 	count          = kingpin.Flag("count", "Number of requets").Short('c').Default("1").Int()
 	delay          = kingpin.Flag("delay", "Time to wait before starting").Default("0s").Duration()
 	loop           = kingpin.Flag("loop", "Repeat `count` requests for `loop` times").Default("1").Int()
-	loopInterval   = kingpin.Flag("loop-interval", "Time between loop iteractions").Default("10s").Duration()
+	loopInterval   = kingpin.Flag("loop-interval", "Time between loop iteractions").Default("5s").Duration()
 	headers        = kingpin.Flag("header", "Http headers to send").Short('H').StringMap()
 	payload        = kingpin.Flag("data-raw", "Request body to send").Short('d').String()
 	pathParams     = kingpin.Flag("path", "Path parameters to send").Short('p').StringMap()
@@ -48,6 +48,9 @@ func main() {
 
 	var wg sync.WaitGroup
 	for l := 0; l < *loop; l++ {
+		if l > 0 {
+			time.Sleep(*loopInterval)
+		}
 		for c := 0; c < *count; c++ {
 			wg.Add(1)
 			go func() {
@@ -79,9 +82,5 @@ func main() {
 		}
 
 		wg.Wait()
-
-		if *loop > 1 {
-			time.Sleep(*loopInterval)
-		}
 	}
 }
