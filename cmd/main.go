@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/PauloLeal/turl"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -13,6 +14,9 @@ var (
 	followLocation = kingpin.Flag("location", "Follow location redirects").Short('L').Bool()
 	method         = kingpin.Flag("request", "Http method").Short('X').Required().String()
 	count          = kingpin.Flag("count", "Number of requets").Short('c').Default("1").Int()
+	delay          = kingpin.Flag("delay", "Time to wait before starting").Default("0s").Duration()
+	loop           = kingpin.Flag("loop", "Repeat `count` requests for `loop` times").Default("1").Int()
+	loopInterval   = kingpin.Flag("loop-interval", "Time between loop iteractions").Default("10s").Duration()
 	headers        = kingpin.Flag("header", "Http headers to send").Short('H').StringMap()
 	payload        = kingpin.Flag("data-raw", "Request body to send").Short('d').String()
 	pathParams     = kingpin.Flag("path", "Path parameters to send").Short('p').StringMap()
@@ -40,36 +44,44 @@ func main() {
 		FollowLocation: *followLocation,
 	}
 
+	time.Sleep(*delay)
+
 	var wg sync.WaitGroup
-	for i := 0; i < *count; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for l := 0; l < *loop; l++ {
+		for c := 0; c < *count; c++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
 
-			ld := turl.MakeRequest(params)
+				ld := turl.MakeRequest(params)
 
-			if *noOutput {
-				return
-			}
+				if *noOutput {
+					return
+				}
 
-			if *errorsOnly && ld.Error == nil {
-				return
-			}
+				if *errorsOnly && ld.Error == nil {
+					return
+				}
 
-			if *statusOnly > 0 && ld.Response.StatusCode != *statusOnly {
-				return
-			}
+				if *statusOnly > 0 && ld.Response.StatusCode != *statusOnly {
+					return
+				}
 
-			switch *outFormat {
-			case "json":
-				ld.PrintJson()
-			case "text":
-				ld.PrintText()
-			default:
-				ld.PrintPretty()
-			}
-		}()
+				switch *outFormat {
+				case "json":
+					ld.PrintJson()
+				case "text":
+					ld.PrintText()
+				default:
+					ld.PrintPretty()
+				}
+			}()
+		}
+
+		wg.Wait()
+
+		if *loop > 1 {
+			time.Sleep(*loopInterval)
+		}
 	}
-
-	wg.Wait()
 }
