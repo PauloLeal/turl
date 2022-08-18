@@ -29,9 +29,9 @@ build: clean build-deps test
 	@$(MAKE) b
 
 build-all: clean mk-build-dir build-deps test
-	GOOS=linux $(MAKE) b && zip -9 $(TARGET_FILE)-linux64.zip $(TARGET_FILE) && rm $(TARGET_FILE)
-	GOOS=windows $(MAKE) b && mv $(TARGET_FILE) $(TARGET_FILE).exe && zip -9 $(TARGET_FILE)-win64.zip $(TARGET_FILE).exe && rm $(TARGET_FILE).exe
-	GOOS=darwin $(MAKE) b && zip -9 $(TARGET_FILE)-osx64.zip $(TARGET_FILE) && rm $(TARGET_FILE)
+	GOARCH=amd64 GOOS=linux $(MAKE) b && zip -9 $(TARGET_FILE)-linux64.zip $(TARGET_FILE) && rm $(TARGET_FILE)
+	GOARCH=amd64 GOOS=windows $(MAKE) b && mv $(TARGET_FILE) $(TARGET_FILE).exe && zip -9 $(TARGET_FILE)-win64.zip $(TARGET_FILE).exe && rm $(TARGET_FILE).exe
+	GOARCH=amd64 GOOS=darwin $(MAKE) b && zip -9 $(TARGET_FILE)-osx64.zip $(TARGET_FILE) && rm $(TARGET_FILE)
 	@mv *.zip ${BUILD_DIR}
 	@find $(BUILD_DIR) -type f
 
