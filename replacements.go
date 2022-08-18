@@ -42,15 +42,19 @@ func randN(n int) int {
 }
 
 func nextSeq() int {
-	seq += 1
-	return seq - 1
+	seq++
+	return seq
 }
 
 func makeReplacements(s string) string {
 	for k, v := range replacements {
 		for {
 			oldS := s
-			s = strings.Replace(s, k, v(), 1)
+
+			//lint:ignore S1017 Avoid calling nextSeq() if not needed
+			if strings.Contains(s, k) {
+				s = strings.Replace(s, k, v(), 1)
+			}
 
 			if oldS == s {
 				break
